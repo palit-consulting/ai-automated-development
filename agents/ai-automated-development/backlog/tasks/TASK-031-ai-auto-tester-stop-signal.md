@@ -1,7 +1,7 @@
 # TASK-031 Add tester stop-condition signaling to auto-continue runner
 
 ## Status
-todo
+done
 
 ## Priority
 high

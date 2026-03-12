@@ -18,6 +18,9 @@ from shared.artifact_paths import (
 from shared.task_utils import extract_task_code
 
 
+VALID_TESTER_OUTCOMES = {"READY", "RETRY", "BLOCKED"}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Write a tester validation report for the selected backlog task."
@@ -56,6 +59,25 @@ class TesterInputs:
 
 def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def determine_tester_outcome(inputs: TesterInputs) -> tuple[str, str]:
+    if not inputs.developer_artifact or not inputs.implementation_artifact:
+        return (
+            "BLOCKED",
+            "Blocked: tester handoff is missing required developer artifacts.",
+        )
+
+    if not inputs.reviewer_artifact:
+        return (
+            "RETRY",
+            "Retry: tester handoff is waiting on a reviewer artifact before validation can continue.",
+        )
+
+    return (
+        "READY",
+        "Pass: developer, implementation, and reviewer artifacts are available for tester handoff.",
+    )
 
 
 def resolve_inputs(
@@ -122,16 +144,9 @@ def build_report(
         else "Missing reviewer artifact."
     )
 
-    outcome = (
-        "READY"
-        if inputs.developer_artifact and inputs.implementation_artifact and inputs.reviewer_artifact
-        else "NOT READY"
-    )
-    verdict = (
-        "Pass: developer, implementation, and reviewer artifacts are available for tester handoff."
-        if outcome == "READY"
-        else "Fail: tester handoff is not ready because one or more prerequisite artifacts are missing."
-    )
+    outcome, verdict = determine_tester_outcome(inputs)
+    if outcome not in VALID_TESTER_OUTCOMES:
+        raise ValueError(f"Unsupported tester outcome: {outcome}")
 
     task_title = task_content.splitlines()[0].strip()
 
@@ -153,6 +168,7 @@ def build_report(
             f"- Repository analysis: `{current_analysis_path.relative_to(workspace_root)}` notes later workflow phases still need integration points and output contracts.",
             "",
             "## Outcome",
+            f"Outcome: {outcome}",
             f"- Status: {outcome}",
             f"- Verdict: {verdict}",
             "",
