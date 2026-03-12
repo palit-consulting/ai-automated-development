@@ -104,6 +104,7 @@ FILE_BLOCK_RE = re.compile(
     re.DOTALL,
 )
 STATUS_SECTION_RE = re.compile(r"(^## Status\s*\n)(\S+)", re.MULTILINE)
+NOTES_SECTION_RE = re.compile(r"(^## Notes\s*\n)(.*?)(?=^## |\Z)", re.MULTILINE | re.DOTALL)
 
 
 def parse_args() -> argparse.Namespace:
@@ -174,6 +175,19 @@ def update_task_status(markdown: str, status: str) -> str:
     if STATUS_SECTION_RE.search(markdown) is None:
         return markdown
     return STATUS_SECTION_RE.sub(rf"\1{status}", markdown, count=1)
+
+
+def append_task_note(markdown: str, note: str) -> str:
+    formatted_note = f"- {note.strip()}"
+
+    match = NOTES_SECTION_RE.search(markdown)
+    if match is None:
+        trimmed = markdown.rstrip()
+        return f"{trimmed}\n\n## Notes\n{formatted_note}\n"
+
+    existing = match.group(2).rstrip()
+    replacement = f"{match.group(1)}{existing}\n{formatted_note}\n"
+    return NOTES_SECTION_RE.sub(replacement, markdown, count=1)
 
 
 def normalize_executed_task_content(markdown: str) -> str:
@@ -943,12 +957,7 @@ def run_developer_phase(
                 implementation_content=implementation_content,
                 dry_run=True,
             )
-            create_and_push_commit(
-                repo_root=repo_root,
-                task_path=task_path,
-                changed_paths=[task_path, implementation_path],
-                dry_run=True,
-            )
+            print("[dry-run] Would commit and push only if execution produced substantive repository changes beyond the task file.")
         print("[dry-run] Actual code changes applied: no")
         return handoff_path, implementation_path, repo_changes_applied
 
@@ -981,6 +990,30 @@ def run_developer_phase(
         print("Developer execution wrote files:")
         for path in execution_written_paths:
             print(f"- {path}")
+
+    if not repo_changes_applied:
+        blocked_reason = (
+            "Developer execution produced no substantive repository changes beyond the task file, "
+            "so the task was not committed or pushed."
+        )
+        blocked_task_text = task_path.read_text(encoding="utf-8")
+        blocked_task_text = update_task_status(blocked_task_text, "blocked")
+        blocked_task_text = append_task_note(blocked_task_text, blocked_reason)
+        task_path.write_text(blocked_task_text, encoding="utf-8")
+        handoff_content = build_developer_handoff_markdown(
+            goal=resolved_goal,
+            repo_root=repo_root,
+            workspace_root=workspace_root,
+            target_name=target_name,
+            task_path=task_path,
+            task_content=blocked_task_text,
+            pushed_commit_hash=None,
+        )
+        handoff_path.write_text(handoff_content, encoding="utf-8")
+        print(f"Developer handoff written: {handoff_path}")
+        print("Developer execution did not produce substantive repository changes; task marked blocked.")
+        print("Actual code changes applied: no")
+        return handoff_path, implementation_path, repo_changes_applied
 
     final_task_text = task_path.read_text(encoding="utf-8")
     final_task_text = update_task_status(final_task_text, "done")
