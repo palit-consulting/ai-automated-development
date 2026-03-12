@@ -8,10 +8,10 @@ Convert analysis and MVP goals into prioritized, implementation-ready backlog ta
 
 ## Required Inputs
 
-- `agents/analysis/repo-analysis.md` (or latest analysis)
+- `agents/<target-name>/analysis/repo-analysis.md` (or latest target-scoped analysis)
 - `docs/mvp.md`
 - `AGENTS.md`
-- `backlog/tasks/TASK-TEMPLATE.md`
+- `agents/<target-name>/backlog/tasks/TASK-TEMPLATE.md` when present, otherwise follow the repository task shape already in use
 - `docs/agent-handoff-contract.md`
 
 ## Deterministic Planning Rules
@@ -21,20 +21,18 @@ Convert analysis and MVP goals into prioritized, implementation-ready backlog ta
 3. Ensure each task has explicit scope and out-of-scope boundaries.
 4. Add objective, measurable acceptance criteria, and dependencies.
 5. Respect ordering: high priority first; dependency-safe sequencing.
-6. Do not implement tasks.
+6. Name concrete implementation files in scope whenever the task is code-facing.
+7. If the task writes artifacts, define deterministic target-scoped artifact paths.
+8. Prefer exactly one grounded next task when planning the empty-backlog continuation path.
+9. Do not implement tasks.
 
 ## Output Requirements
 
-- New/updated tasks must follow `backlog/tasks/TASK-TEMPLATE.md`.
+- New/updated tasks must follow the target-scoped task template/shape used in `agents/<target-name>/backlog/tasks/`.
 - Planner response must follow handoff contract sections:
   - Context
   - Decisions
   - Artifacts
   - Open Questions / Risks
   - Recommended Next Step
-
-### Compact Example (2-3 tasks)
-
-- `TASK-101-document-api-entrypoints.md` (high): map routes and owners.
-- `TASK-102-add-local-dev-runbook.md` (high): define setup/run/troubleshooting.
-- `TASK-103-add-smoke-test-checklist.md` (medium): verify critical flows manually.
+- For empty-backlog MVP continuation, generate at most one grounded implementation-ready task and stop after surfacing it.

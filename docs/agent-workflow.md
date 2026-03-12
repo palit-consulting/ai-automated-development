@@ -4,7 +4,7 @@
 This document defines how AI agents should operate in this repository so task execution stays consistent, scoped, and reliable.
 
 ## Next Task Selection Rule
-Select the next task from `backlog/tasks/` using this order:
+Select the next task from `agents/<target-name>/backlog/tasks/` using this order:
 
 1. Keep only tasks with `Status: todo`.
 2. Prefer highest priority (`high` over `medium` over `low`).
@@ -22,8 +22,8 @@ If a promptless local run finds no eligible `todo` or `in-progress` task, do not
 Instead:
 
 1. Read `docs/mvp.md`.
-2. Read `agents/analysis/repo-analysis.md`.
-3. Generate exactly one new implementation-ready backlog task in `agents/backlog/tasks/` using the next sequential `TASK-###` number.
+2. Read `agents/<target-name>/analysis/repo-analysis.md`.
+3. Generate exactly one new implementation-ready backlog task in `agents/<target-name>/backlog/tasks/` using the next sequential `TASK-###` number.
 4. Include at least:
    - `Status`
    - `Priority`
@@ -61,6 +61,8 @@ When a task is complete, report:
 - List of modified files
 - Assumptions made
 - Possible follow-up tasks
+- Verification commands and outcomes
+- Pushed commit hash when developer execution commits work
 
 ## Follow-up Task Creation
 If implementation reveals additional work, create follow-up tasks in `backlog/tasks/` rather than expanding the scope of the current task.
@@ -69,6 +71,16 @@ If implementation reveals additional work, create follow-up tasks in `backlog/ta
 Keep work review-friendly for humans by limiting scope to the current task, preserving repository usability, and providing clear completion reporting.
 
 Tasks generated because the backlog is empty are proposals only until a human reviews them.
+
+## MVP Auto-Continue
+When the runner is explicitly started in MVP auto-continue mode, it may continue through existing eligible tasks without waiting for a human between every cycle.
+
+Constraints:
+
+- auto-continue is valid only while the target repository state is `MVP`
+- stop reasons must be written as visible target-scoped artifacts
+- newly generated backlog tasks may still pause the loop for human review
+- reviewer and tester outputs must remain evidence-based and target-scoped
 
 ## Branch Strategy (MVP Phase)
 During MVP bootstrap, agents may commit and push directly to `main`.

@@ -80,8 +80,8 @@ The intended MVP workflow is:
 7. Developer agent commits and pushes the verified task result
 8. Reviewer agent reviews the pushed commit and the recorded developer verification evidence
 9. Tester agent validates the task result, acceptance criteria, and loop readiness
-9. Orchestrator decides whether to continue with the next task
-10. The loop repeats automatically until the repository reaches `MVP_DONE` or a stop condition is hit
+10. Orchestrator decides whether to continue with the next task
+11. The loop repeats automatically until the repository reaches `MVP_DONE` or a stop condition is hit
 
 During `MVP`, the default assumption is continuous autonomous progress.
 

@@ -8,7 +8,7 @@ Implement exactly one approved backlog task in a focused change set.
 
 ## Required Inputs
 
-- Selected task file in `agents/backlog/tasks/`
+- Selected task file in `agents/<target-name>/backlog/tasks/`
 - Repository context and relevant docs
 - `AGENTS.md`
 - `docs/agent-workflow.md`
@@ -20,12 +20,15 @@ Implement exactly one approved backlog task in a focused change set.
 2. Set task status to `in-progress` before implementation.
 3. Implement only in-scope changes required by the task.
 4. Keep unrelated refactors out of scope.
-5. Run relevant checks.
+5. Run the task-appropriate verification commands and record their outcomes.
 6. After acceptance criteria are met, create a small focused commit for the task changes and push that commit to the active branch.
 7. Include the pushed commit hash in the developer handoff so the reviewer can review the exact committed state.
 8. Set task status to `done` after acceptance criteria are met and the handoff is ready for review.
 
 If blocked, set status to `blocked` and explain why.
+
+Do not treat task-file-only edits, prompt-only edits, or handoff-only churn as task completion.
+Do not mark the task `done` if the intended implementation files were not changed or required verification did not pass.
 
 ## Required Output Format
 
@@ -46,3 +49,4 @@ Include changed files, assumptions, verification commands, and the pushed commit
 - Task changes committed and pushed
 - Status updated (`in-progress` → `done`)
 - Output ready for Reviewer
+- Developer handoff includes changed files, verification evidence, and pushed commit hash

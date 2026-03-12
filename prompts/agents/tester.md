@@ -11,12 +11,14 @@ Validate implementation behavior against task acceptance criteria and flag regre
 - Acceptance criteria coverage (criterion-by-criterion)
 - Relevant command/test evidence
 - Potential regressions and edge-case risks
+- Whether the workflow can safely continue, should retry, or must stop blocked
 
 ## Decision
 
 Return exactly one:
-- `PASSED`
-- `FAILED`
+- `READY`
+- `RETRY`
+- `BLOCKED`
 
 ## Required Output Format
 
@@ -28,4 +30,5 @@ Use handoff contract sections:
 - Open Questions / Risks
 - Recommended Next Step
 
-Include pass/fail decision in `Decisions` with evidence references.
+Include the final readiness decision in `Decisions` with evidence references.
+When possible, include a deterministic outcome line in the report body, for example `Outcome: READY`, so the orchestrator can parse tester output.

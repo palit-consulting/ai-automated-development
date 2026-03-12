@@ -52,7 +52,7 @@ All work is tracked in the repository backlog.
 
 Path:
 
-    backlog/tasks/
+    agents/<target-name>/backlog/tasks/
 
 Agents must never invent work outside the backlog unless creating new backlog tasks for human review.
 
@@ -62,7 +62,7 @@ Agents must never invent work outside the backlog unless creating new backlog ta
 
 When asked to pick the next task, agents must:
 
-1. Scan `backlog/tasks/`
+1. Scan `agents/<target-name>/backlog/tasks/`
 2. Select tasks with status `todo`
 3. Prefer higher priority tasks first
 4. Ensure dependencies are `done`
@@ -78,7 +78,7 @@ In that mode, use `docs/mvp.md` as the default project context and select the ne
 
 Selection order:
 
-1. Scan `agents/backlog/tasks/` first, then `backlog/tasks/` if present
+1. Scan `agents/<target-name>/backlog/tasks/` first, then `backlog/tasks/` if present
 2. Prefer tasks with status `todo`
 3. If no `todo` task is eligible, resume the next eligible task with status `in-progress`
 4. Prefer higher priority tasks first
@@ -88,12 +88,12 @@ Selection order:
 If no eligible task exists, the planner should try to generate exactly one new implementation-ready backlog task from:
 
 - `docs/mvp.md`
-- `agents/analysis/repo-analysis.md`
+- `agents/<target-name>/analysis/repo-analysis.md`
 
 Rules for that empty-backlog path:
 
 - create only one new task
-- use the next sequential `TASK-###` number in `agents/backlog/tasks/`
+- use the next sequential `TASK-###` number in `agents/<target-name>/backlog/tasks/`
 - keep the task small and implementation-ready
 - include `Status`, `Priority`, `Objective`, `Scope`, `Out of Scope`, `Acceptance Criteria`, and `Dependencies`
 - ground the task in the next missing MVP slice supported by the latest repository analysis
@@ -177,7 +177,12 @@ New tasks require human review before execution.
 
 ## Human Review Loop
 
-Development follows a human-supervised workflow:
+Development supports two modes:
+
+1. Standard supervised execution
+2. MVP auto-continue execution
+
+Standard supervised execution:
 
 1. Agent picks a backlog task
 2. Agent implements the task
@@ -188,9 +193,14 @@ Development follows a human-supervised workflow:
 7. Human reviews backlog
 8. Human instructs the agent to continue
 
-If a new task is generated because the backlog is exhausted, the loop pauses at that point until a human reviews the generated task.
+MVP auto-continue execution:
 
-Agents must never continue automatically without instruction.
+1. The orchestrator may continue automatically while the target repository state is `MVP`
+2. Developer, reviewer, and tester outputs must still be written as target-scoped artifacts
+3. The loop must stop cleanly on blockers, policy restrictions, or missing grounded next work
+4. If a new task is generated because the backlog is exhausted, the loop may stop and surface that task for human review rather than auto-implementing it immediately
+
+Outside explicit MVP auto-continue behavior, agents must not continue automatically without instruction.
 
 ---
 
@@ -226,6 +236,16 @@ Typical repository layout:
     agents/      agent-related documentation
 
 Agents should respect this structure and place new files appropriately.
+
+For target-scoped runtime artifacts, prefer:
+
+    agents/<target-name>/analysis/
+    agents/<target-name>/backlog/tasks/
+    agents/<target-name>/handoff/
+    agents/<target-name>/implementation/
+    agents/<target-name>/review/
+    agents/<target-name>/test/
+    agents/<target-name>/logs/
 
 ---
 
