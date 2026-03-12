@@ -192,3 +192,13 @@ Agents should respect this structure and place new files appropriately.
 Agents should not only complete tasks.
 
 They should help move the project toward a practical, usable MVP for AI-driven development workflows.
+
+## Backlog Control Rule
+
+The backlog currently contains a predefined set of tasks required to bootstrap the system.
+
+Agents must not create new backlog tasks until all existing `todo` tasks are completed.
+
+The goal of the current backlog is to reach the first working MVP of the multi-agent development workflow.
+
+New tasks may only be created after the backlog is cleared or when explicitly instructed by a human.
