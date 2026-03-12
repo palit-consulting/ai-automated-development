@@ -46,3 +46,30 @@ When completing a task, the agent should provide:
 - list of modified files
 - assumptions made
 - possible follow-up tasks
+
+## Branch Strategy (MVP Phase)
+
+Until the first MVP is completed, agents may **commit and push directly to the `main` branch**.
+
+This is allowed to keep development fast and reduce overhead while the project is still in early bootstrap.
+
+Rules:
+
+- Keep changes **small and focused**
+- Only implement the **current backlog task**
+- Do not introduce unrelated refactoring
+- Ensure the repository remains in a **working state**
+
+After the MVP phase, the workflow will change to:
+
+- feature branches
+- pull requests
+- code review
+
+## Commit Messages
+
+Use clear commit messages referencing the task id.
+
+Example: 
+
+TASK-001 bootstrap repository structure
