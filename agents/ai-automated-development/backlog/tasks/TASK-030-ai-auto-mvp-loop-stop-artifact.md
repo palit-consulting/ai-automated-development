@@ -1,7 +1,7 @@
 # TASK-030 Add MVP auto-continue orchestrator loop with visible stop artifact
 
 ## Status
-todo
+done
 
 ## Priority
 high
