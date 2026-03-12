@@ -103,3 +103,21 @@ Examples of good follow-up thinking:
 - missing bootstrap tooling
 
 The goal is not only to finish the current task, but also to help build a realistic MVP backlog for the repository.
+
+## Follow-up Task Creation
+
+After completing a task, the agent should propose additional backlog tasks that help move the repository toward a usable MVP.
+
+The agent must not think only about the current task in isolation.
+
+Rules:
+
+- Propose follow-up tasks when the backlog becomes too small
+- Think about what is missing to reach an MVP
+- Prefer small, concrete, implementation-ready tasks
+- Use the next sequential TASK number
+- Set the initial status to `todo`
+- Include priority, scope, out of scope, acceptance criteria, and dependencies
+- Do not start the newly created tasks automatically
+
+Human review is required before newly created tasks are executed.
