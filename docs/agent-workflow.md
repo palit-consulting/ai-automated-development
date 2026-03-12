@@ -1,8 +1,10 @@
 # Agent Workflow
 
+## Purpose
+
 This document defines the detailed, repo-native workflow for AI agents working in this repository.
 
-## 1) Select the Next Task (Deterministic Rule)
+## Next Task Selection Rule
 
 When choosing a task from `backlog/tasks/`, use this exact order:
 
@@ -16,7 +18,7 @@ Example tie-break:
 - `TASK-003` and `TASK-004` are both `todo`, `high`, and unblocked.
 - Pick `TASK-003` because it has the lower number.
 
-## 2) Mark Task State in Backlog
+## Task State Updates
 
 Before making code changes:
 
@@ -28,14 +30,14 @@ After implementation and validation are complete:
 1. Change `## Status` to `done`.
 2. Keep the rest of the task content intact unless a small clarification is required.
 
-## 3) Implementation Rules
+## Implementation Rules
 
 - Keep changes small and focused on the current task.
 - Do not introduce unrelated refactors.
 - Prefer simple, maintainable solutions.
 - Keep the repository in a working state.
 
-## 4) Reporting Format (Required)
+## Reporting Format
 
 At task completion, report:
 
@@ -44,7 +46,15 @@ At task completion, report:
 - Assumptions made
 - Possible follow-up tasks
 
-## 5) Branch Strategy (MVP Phase)
+## Follow-up Task Creation
+
+If additional work is discovered during implementation, capture it as possible follow-up tasks in the completion report so it can be added to the backlog.
+
+## Human Review Loop
+
+When a human reviewer requests changes or clarifications, apply updates using the same workflow: keep changes focused, preserve task context, and report what changed.
+
+## Branch Strategy (MVP Phase)
 
 During MVP bootstrap, agents may commit and push directly to `main`.
 
