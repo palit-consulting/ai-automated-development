@@ -31,7 +31,7 @@
 ---
 
 ## Repository Snapshot
-- File count (excluding .git): 3950
+- File count (excluding .git): 3952
 - Top-level directories: .idea, .venv, agents, docs, examples, prompts, scripts, shared
 - agents/backlog/tasks present: True
 - prompts/agents present: True

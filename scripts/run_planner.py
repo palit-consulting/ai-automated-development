@@ -10,10 +10,12 @@ from shared.artifact_paths import analysis_path, generated_tasks_dir
 from shared.task_utils import (
     TASK_FILE_RE,
     find_task_by_marker,
+    load_task_records,
     next_task_number,
     select_next_task,
     slugify,
 )
+from shared.target_repo_config import resolve_target_repo_config
 
 FILE_BLOCK_RE = re.compile(
     r"===FILE:\s*(TASK-\d{3}-[a-z0-9-]+\.md)\s*===\n(.*?)\n===END===",
@@ -150,6 +152,20 @@ def read_text_if_exists(path: Path) -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
+def slug_task_statuses(repo_root: Path, slug: str) -> list[str]:
+    suffix = f"-{slug}.md"
+    return [
+        record.status
+        for record in load_task_records(repo_root)
+        if record.path.name.endswith(suffix)
+    ]
+
+
+def should_skip_candidate(repo_root: Path, slug: str) -> bool:
+    statuses = slug_task_statuses(repo_root, slug)
+    return any(status in {"todo", "in-progress", "done"} for status in statuses)
+
+
 def detect_commit_push_gap(repo_root: Path, mvp_text: str, _analysis_text: str) -> MVPTaskCandidate | None:
     run_developer_text = read_text_if_exists(repo_root / "scripts" / "run_developer.py").lower()
     run_reviewer_text = read_text_if_exists(repo_root / "scripts" / "run_reviewer.py").lower()
@@ -162,6 +178,9 @@ def detect_commit_push_gap(repo_root: Path, mvp_text: str, _analysis_text: str) 
     reviewer_uses_commit_hash = "commit hash" in run_reviewer_text or "pushed commit" in run_reviewer_text
 
     if not mvp_requires or developer_has_git_automation:
+        return None
+
+    if should_skip_candidate(repo_root, "automate-developer-commit-push-in-mvp-mode"):
         return None
 
     return MVPTaskCandidate(
@@ -204,9 +223,17 @@ def detect_repo_state_gap(repo_root: Path, mvp_text: str, _analysis_text: str) -
     run_cycle_text = read_text_if_exists(repo_root / "scripts" / "run_cycle.py")
     env_example_text = read_text_if_exists(repo_root / ".env.example")
     mvp_requires = "repository state" in mvp_text.lower() and "mvp_done" in mvp_text.lower()
-    repo_state_is_supported = "TARGET_REPO_STATE" in run_cycle_text or "repo-state" in run_cycle_text.lower()
+    repo_state_is_supported = (
+        "TARGET_REPOSITORY_STATE" in run_cycle_text
+        or "TARGET_REPO_STATE" in run_cycle_text
+        or "target-repository-state" in run_cycle_text.lower()
+        or "repo-state" in run_cycle_text.lower()
+    )
 
     if not mvp_requires or repo_state_is_supported:
+        return None
+
+    if should_skip_candidate(repo_root, "add-explicit-target-repository-state-handling"):
         return None
 
     return MVPTaskCandidate(
@@ -250,6 +277,9 @@ def detect_autonomous_mvp_loop_gap(repo_root: Path, mvp_text: str, _analysis_tex
     autonomous_loop_supported = "continue automatically" in run_cycle_text or "mvp_done" in run_cycle_text
 
     if not mvp_requires or autonomous_loop_supported:
+        return None
+
+    if should_skip_candidate(repo_root, "add-mvp-mode-autonomous-continuation"):
         return None
 
     return MVPTaskCandidate(
@@ -478,7 +508,14 @@ def main() -> None:
     from dotenv import load_dotenv
 
     load_dotenv()
-    repo_path = Path(os.getenv("TARGET_REPO_PATH", ".")).resolve()
+    workspace_root = Path(".").resolve()
+    target_config = resolve_target_repo_config(
+        workspace_root,
+        cli_repo=None,
+        cli_state=None,
+        config_name=os.getenv("TARGET_REPOSITORY_CONFIG"),
+    )
+    repo_path = target_config.path
     written = run_llm_planner(repo_path)
 
     print("Wrote task files:")

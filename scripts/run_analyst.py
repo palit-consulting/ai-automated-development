@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from shared.artifact_paths import analysis_path, generated_tasks_dir
+from shared.target_repo_config import resolve_target_repo_config
 
 MAX_FILES = 120
 MAX_FILE_CHARS = 5000
@@ -219,7 +220,14 @@ def main() -> None:
     from dotenv import load_dotenv
 
     load_dotenv()
-    repo_path = Path(os.getenv("TARGET_REPO_PATH", ".")).resolve()
+    workspace_root = Path(".").resolve()
+    target_config = resolve_target_repo_config(
+        workspace_root,
+        cli_repo=None,
+        cli_state=None,
+        config_name=os.getenv("TARGET_REPOSITORY_CONFIG"),
+    )
+    repo_path = target_config.path
     output_path = run_llm_analyst(repo_path)
     print(f"Wrote {output_path}")
 

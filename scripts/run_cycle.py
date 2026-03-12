@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
 from typing import Callable
 
@@ -13,15 +12,16 @@ from run_developer import run_developer_phase
 from run_planner import PlannerPhaseResult, run_planner_phase
 from run_reviewer import run_reviewer_phase
 from run_tester import run_tester_phase
+from shared.target_repo_config import (
+    DEFAULT_REPOSITORY_STATE,
+    SUPPORTED_REPOSITORY_STATES,
+    resolve_target_repo_config,
+)
 
 PHASE_ORDER = ["analyst", "planner", "developer", "reviewer", "tester"]
 DEFAULT_AUTOMATION_GOAL = (
     "Advance the next missing MVP item from docs/mvp.md using the next eligible backlog task."
 )
-SUPPORTED_REPOSITORY_STATES = ("MVP", "MVP_DONE", "TEST", "PROD")
-DEFAULT_REPOSITORY_STATE = "MVP"
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run a thin-slice AI-dev cycle against this repository."
@@ -47,16 +47,23 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--repo",
-        default=".",
-        help="Target repository path. Defaults to current repository.",
+        default=None,
+        help="Explicit target repository path. Overrides the selected target config.",
+    )
+    parser.add_argument(
+        "--target-config",
+        default=None,
+        help=(
+            "Target repository config name or .properties path. "
+            "If omitted, config/targets/default.properties is used when present."
+        ),
     )
     parser.add_argument(
         "--target-repository-state",
         choices=SUPPORTED_REPOSITORY_STATES,
         default=None,
         help=(
-            "Explicit target repository state for this run. Overrides the "
-            "TARGET_REPOSITORY_STATE environment variable."
+            "Explicit target repository state for this run. Overrides the selected target config."
         ),
     )
     parser.add_argument(
@@ -70,22 +77,6 @@ def parse_args() -> argparse.Namespace:
         help="When the developer phase runs, use the local execution mode to apply repository changes.",
     )
     return parser.parse_args()
-
-
-def resolve_repository_state(cli_value: str | None) -> str:
-    raw_state = cli_value or os.getenv(
-        "TARGET_REPOSITORY_STATE", DEFAULT_REPOSITORY_STATE
-    )
-    state = raw_state.strip().upper()
-    if state not in SUPPORTED_REPOSITORY_STATES:
-        supported = ", ".join(SUPPORTED_REPOSITORY_STATES)
-        raise ValueError(
-            f"Unsupported target repository state '{raw_state}'. "
-            f"Expected one of: {supported}."
-        )
-    return state
-
-
 def apply_repository_state_rules(args: argparse.Namespace, state: str) -> None:
     if state == "PROD" and args.execute:
         raise ValueError(
@@ -131,13 +122,28 @@ def apply_repository_state_rules(args: argparse.Namespace, state: str) -> None:
 
 def main() -> int:
     args = parse_args()
-    repo_root = Path(args.repo).resolve()
-    repository_state = resolve_repository_state(args.target_repository_state)
+    workspace_root = Path(".").resolve()
+    target_config = resolve_target_repo_config(
+        workspace_root,
+        cli_repo=args.repo,
+        cli_state=args.target_repository_state,
+        config_name=args.target_config,
+    )
+    repo_root = target_config.path
+    repository_state = target_config.repository_state
     apply_repository_state_rules(args, repository_state)
 
     planner_result: PlannerPhaseResult | None = None
     analyst_goal = args.goal or DEFAULT_AUTOMATION_GOAL
 
+    if target_config.source_path is not None:
+        print(
+            f"Target repository config: {target_config.name} "
+            f"({target_config.source_path.relative_to(workspace_root)})"
+        )
+    else:
+        print("Target repository config: ad-hoc CLI/default settings")
+    print(f"Target repository path: {repo_root}")
     print(f"Target repository state: {repository_state}")
 
     if not args.goal:
