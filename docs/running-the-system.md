@@ -23,6 +23,16 @@ The system uses multiple specialized agents:
 
 Each agent performs a specific step in the development loop.
 
+Artifacts are written under the active target namespace:
+
+- `agents/<target-name>/analysis/`
+- `agents/<target-name>/backlog/tasks/`
+- `agents/<target-name>/handoff/developer/`
+- `agents/<target-name>/implementation/developer/`
+- `agents/<target-name>/review/reviewer/`
+- `agents/<target-name>/test/`
+- `agents/<target-name>/orchestrator/stop-reasons/`
+
 ---
 
 # Preparation
@@ -35,12 +45,24 @@ Before running the system, ensure the repository contains:
 - agent prompts (`prompts/agents/`)
 - generated backlog artifacts (`agents/<target-name>/backlog/tasks/`)
 
-## Thin-Slice CLI (Analyst + Planner + Developer)
+## Wrapper behavior
 
-The `run-agents.sh` wrapper now defaults to a full local run through developer execution:
+The `run-agents.sh` wrapper starts the local cycle runner in developer execution mode by default:
 
     ./run-agents.sh
     ./run-agents.sh "Your goal here"
+
+This is equivalent to invoking:
+
+    python3 scripts/run_cycle.py --phase developer --execute
+    python3 scripts/run_cycle.py --phase developer --execute "Your goal here"
+
+Use a dry run when you want to inspect what would execute without making changes:
+
+    ./run-agents.sh --dry-run
+    ./run-agents.sh "Your goal here" --dry-run
+
+Use the Python entry points directly when you want more control over a specific phase or a non-executing artifact-only pass.
 
 Install dependencies:
 
@@ -57,6 +79,8 @@ Minimum `.env` values:
 
     OPENAI_API_KEY=<your_api_key>
     OPENAI_MODEL=gpt-4o
+
+## Direct phase commands
 
 Run the Analyst phase:
 
@@ -81,8 +105,8 @@ Run the Developer artifact phase:
 
 This creates:
 
-    agents/handoff/developer/task-###-developer-handoff.md
-    agents/implementation/developer/task-###-implementation.md
+    agents/<target-name>/handoff/developer/task-###-developer-handoff.md
+    agents/<target-name>/implementation/developer/task-###-implementation.md
 
 Run the Developer execution mode:
 
@@ -95,9 +119,13 @@ Without `--execute`, `run_developer.py` prepares developer artifacts only.
 
 When no goal is provided, the local runner uses `docs/mvp.md` as default context and selects the next eligible backlog task automatically.
 
-These scripts are intentionally file-based. Reviewer and tester runners are available as `run_reviewer.py` and `run_tester.py`.
+In supervised runs, a human typically reviews each phase outcome before continuing to the next step.
 
-Use the Python entry points directly when you want a non-executing planner or developer-artifact pass.
+In `MVP` auto-continue mode, the orchestrator may continue automatically when the current repository state and agent outputs allow it, and it stops when approval, retries, or blockers require intervention. Stop reasons are recorded under:
+
+    agents/<target-name>/orchestrator/stop-reasons/
+
+These scripts are intentionally file-based. Reviewer and tester runners are available as `run_reviewer.py` and `run_tester.py`.
 
 ---
 
@@ -177,15 +205,17 @@ Prompt example:
 
 Current local runner outputs:
 
-- `agents/handoff/developer/task-XXX-developer-handoff.md`
-- `agents/implementation/developer/task-XXX-implementation.md`
+- `agents/<target-name>/handoff/developer/task-XXX-developer-handoff.md`
+- `agents/<target-name>/implementation/developer/task-XXX-implementation.md`
 
 Execution mode:
 
-- run `python3 scripts/run_developer.py --execute`
-- or run `python3 scripts/run_developer.py "Your goal here" --execute`
+- run `./run-agents.sh`
+- or run `./run-agents.sh "Your goal here"`
+- for inspection only, run `./run-agents.sh --dry-run`
+- the wrapper uses developer execution mode by default
 - the selected task is moved to `in-progress`
-- repository file changes returned by the local OpenAI prompt utility are applied locally
+- repository file changes returned by the local OpenAI prompt utility are applied locally when execution is enabled
 
 Developer execution outputs, when a coding agent actually performs the task:
 
@@ -207,7 +237,7 @@ Prompt example:
 
 Output file:
 
-    agents/review/reviewer/task-XXX-review.md
+    agents/<target-name>/review/reviewer/task-XXX-review.md
 
 Possible outcomes:
 
@@ -230,7 +260,7 @@ Prompt example:
 
 Output file:
 
-    agents/test/task-XXX-test.md
+    agents/<target-name>/test/task-XXX-test.md
 
 Possible outcomes:
 
@@ -248,7 +278,9 @@ The human reviews:
 - review report
 - validation result
 
-The human decides whether the task is accepted in supervised mode. In `MVP` auto-continue mode, the orchestrator may continue or stop based on reviewer/tester outputs and state-aware policy.
+In supervised mode, the human decides whether the task is accepted before the loop advances.
+
+In `MVP` auto-continue mode, the orchestrator may continue or stop based on reviewer/tester outputs and the current state-aware policy.
 
 If accepted, the task status becomes:
 
