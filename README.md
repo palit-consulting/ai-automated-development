@@ -65,7 +65,7 @@ Possible contributions include:
 - example workflows
 - documentation improvements
 
-Please open an issue or submit a pull request.
+Please review the contribution workflow in `docs/contributing.md` before opening an issue or pull request.
 
 ---
 
