@@ -16,7 +16,7 @@
 - Analyst output should be regenerated each run to keep planning grounded in current state.
 
 ## Artifacts
-- agents/analysis/repo-analysis.md: This analysis snapshot.
+- agents/ai-automated-development/analysis/repo-analysis.md: This analysis snapshot.
 - Repository snapshot summary: file count, top-level directories, and documentation previews supporting onboarding intake.
 
 ## Open Questions / Risks
@@ -31,8 +31,8 @@
 ---
 
 ## Repository Snapshot
-- File count (excluding .git): 3952
-- Top-level directories: .idea, .venv, agents, docs, examples, prompts, scripts, shared
+- File count (excluding .git): 3956
+- Top-level directories: .idea, .venv, agents, config, docs, examples, prompts, scripts, shared
 - agents/backlog/tasks present: True
 - prompts/agents present: True
 
