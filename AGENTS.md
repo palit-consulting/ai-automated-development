@@ -100,6 +100,7 @@ Rules for that empty-backlog path:
 - reference real existing repository paths unless the task explicitly creates one new file in an existing area
 - use acceptance criteria that can be exercised by a real command, dry-run, or visible artifact in the current repo
 - if the task introduces a new artifact path, state whether it replaces or complements any existing artifact path
+- if the task depends on an existing helper, config object, dataclass, or CLI contract, use the exact names and signatures from the current source
 - stop after task generation and surface the result for human review
 - if required inputs are missing or no grounded next task can be produced, stop cleanly and explain why
 

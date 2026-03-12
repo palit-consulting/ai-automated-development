@@ -27,6 +27,7 @@ Generated backlog tasks should follow the same rule:
 - reference current repository paths that actually exist
 - avoid stale or parallel path conventions unless the task explicitly introduces a new one
 - use acceptance criteria that can be verified by a real command, dry-run, or visible artifact
+- if they depend on existing helper APIs, dataclasses, or config objects, use the exact current names and signatures from source
 
 ---
 

@@ -492,20 +492,23 @@ def main() -> int:
     args = parse_args()
     workspace_root = Path(__file__).resolve().parents[1]
     config = resolve_target_repo_config(
-        workspace_root=workspace_root,
-        target_config_arg=args.target_config,
-        repo_override=args.repo,
-        repository_state_override=args.target_repository_state,
+        workspace_root,
+        cli_repo=args.repo,
+        cli_state=args.target_repository_state,
+        config_name=args.target_config,
     )
 
-    args.repo = str(config.repo_path)
+    args.repo = str(config.path)
     if args.target_repository_state is None:
         args.target_repository_state = config.repository_state
     target_name = config.name
-    repo_root = config.repo_path.resolve()
+    repo_root = config.path.resolve()
     analyst_goal = args.goal or DEFAULT_AUTOMATION_GOAL
 
-    print(f"Target config: {config.config_path}")
+    if config.source_path is not None:
+        print(f"Target config: {config.source_path}")
+    else:
+        print("Target config: ad-hoc CLI/default settings")
     print(f"Target name: {target_name}")
     print(f"Target repository: {repo_root}")
     print(f"Target repository state: {config.repository_state}")

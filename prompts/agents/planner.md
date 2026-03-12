@@ -27,7 +27,8 @@ Convert analysis and MVP goals into prioritized, implementation-ready backlog ta
 9. Use real repository paths and modules that already exist, unless the task explicitly creates one new file in an existing area.
 10. Acceptance criteria must use runnable commands or observable behaviors that match the current repo layout and CLI shape.
 11. If a task proposes a new artifact location, say whether it replaces or complements any existing artifact path and avoid parallel duplicate artifact systems without justification.
-12. Do not implement tasks.
+12. If a task references an existing helper function, dataclass, config object, or CLI flag, inspect the current source first and use the exact signature and field names that actually exist.
+13. Do not implement tasks.
 
 ## Output Requirements
 
@@ -46,3 +47,4 @@ Convert analysis and MVP goals into prioritized, implementation-ready backlog ta
 - Do not use stale artifact paths; prefer the current target-scoped layout under `agents/<target-name>/...`.
 - Do not write vague acceptance criteria such as "works correctly" without a concrete command, file, or observable output.
 - When grounding a task in a stop condition or runtime path, make sure the acceptance criteria describe a command that can actually reach that path in the current runner.
+- Do not invent helper APIs such as `config.repo_path` or renamed loader keyword arguments unless those exact names exist in the current source.
