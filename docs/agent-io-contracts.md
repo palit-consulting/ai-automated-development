@@ -18,8 +18,15 @@ All agent outputs should follow these rules:
 - predictable file locations
 - minimal ambiguity
 - human-readable
+- grounded in real repository paths and runnable workflow steps
 
 Agents should write outputs to dedicated directories in the repository.
+
+Generated backlog tasks should follow the same rule:
+
+- reference current repository paths that actually exist
+- avoid stale or parallel path conventions unless the task explicitly introduces a new one
+- use acceptance criteria that can be verified by a real command, dry-run, or visible artifact
 
 ---
 

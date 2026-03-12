@@ -24,7 +24,10 @@ Convert analysis and MVP goals into prioritized, implementation-ready backlog ta
 6. Name concrete implementation files in scope whenever the task is code-facing.
 7. If the task writes artifacts, define deterministic target-scoped artifact paths.
 8. Prefer exactly one grounded next task when planning the empty-backlog continuation path.
-9. Do not implement tasks.
+9. Use real repository paths and modules that already exist, unless the task explicitly creates one new file in an existing area.
+10. Acceptance criteria must use runnable commands or observable behaviors that match the current repo layout and CLI shape.
+11. If a task proposes a new artifact location, say whether it replaces or complements any existing artifact path and avoid parallel duplicate artifact systems without justification.
+12. Do not implement tasks.
 
 ## Output Requirements
 
@@ -36,3 +39,10 @@ Convert analysis and MVP goals into prioritized, implementation-ready backlog ta
   - Open Questions / Risks
   - Recommended Next Step
 - For empty-backlog MVP continuation, generate at most one grounded implementation-ready task and stop after surfacing it.
+
+## Quality Bar For Generated Tasks
+
+- Do not reference nonexistent repo paths such as `shared/...` when the real code lives in `scripts/shared/...`.
+- Do not use stale artifact paths; prefer the current target-scoped layout under `agents/<target-name>/...`.
+- Do not write vague acceptance criteria such as "works correctly" without a concrete command, file, or observable output.
+- When grounding a task in a stop condition or runtime path, make sure the acceptance criteria describe a command that can actually reach that path in the current runner.

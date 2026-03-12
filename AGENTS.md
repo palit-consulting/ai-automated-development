@@ -97,6 +97,9 @@ Rules for that empty-backlog path:
 - keep the task small and implementation-ready
 - include `Status`, `Priority`, `Objective`, `Scope`, `Out of Scope`, `Acceptance Criteria`, and `Dependencies`
 - ground the task in the next missing MVP slice supported by the latest repository analysis
+- reference real existing repository paths unless the task explicitly creates one new file in an existing area
+- use acceptance criteria that can be exercised by a real command, dry-run, or visible artifact in the current repo
+- if the task introduces a new artifact path, state whether it replaces or complements any existing artifact path
 - stop after task generation and surface the result for human review
 - if required inputs are missing or no grounded next task can be produced, stop cleanly and explain why
 

@@ -33,7 +33,9 @@ Instead:
    - `Acceptance Criteria`
    - `Dependencies`
 5. Keep the task small and grounded in the next missing MVP slice described by the MVP and repository analysis.
-6. Stop and surface the generated task for human review before implementation continues.
+6. Reference real repository paths and runnable commands that match the current runner/layout.
+7. If the task introduces a new artifact location, explain whether it replaces or complements any existing artifact path.
+8. Stop and surface the generated task for human review before implementation continues.
 
 If either required input is missing, unreadable, or insufficient to derive a grounded next task, stop cleanly with an operator-facing explanation.
 
