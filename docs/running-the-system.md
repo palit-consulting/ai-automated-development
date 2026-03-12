@@ -43,6 +43,32 @@ Create these directories if they do not exist:
 
 ---
 
+
+## Thin-Slice CLI (Analyst + Planner)
+
+You can run a minimal local cycle with:
+
+    python3 scripts/run_cycle.py "<your goal>"
+
+This command runs:
+
+1. `analyst` phase (writes `analysis/repo-analysis.md`)
+2. `planner` phase (creates or updates a task in `backlog/tasks/`)
+
+Useful options:
+
+- run analyst only:
+
+      python3 scripts/run_cycle.py "<your goal>" --phase analyst
+
+- preview changes without writing files:
+
+      python3 scripts/run_cycle.py "<your goal>" --dry-run
+
+The script is intentionally thin so `developer`, `reviewer`, and `tester` phases can be added later.
+
+---
+
 # Step 1 — Define the Goal
 
 The human defines the goal for the target repository.
