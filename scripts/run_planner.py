@@ -348,6 +348,92 @@ def parse_candidate_dict(payload: object) -> MVPTaskCandidate | None:
     )
 
 
+CONCRETE_PATH_RE = re.compile(r"(?:[A-Za-z0-9_.<>-]+/)+[A-Za-z0-9_.<>-]+")
+
+
+def text_has_concrete_path(text: str) -> bool:
+    return bool(CONCRETE_PATH_RE.search(text))
+
+
+def candidate_mentions_target_artifact_path(candidate: MVPTaskCandidate) -> bool:
+    combined = "\n".join(
+        (
+            *candidate.scope,
+            *candidate.acceptance_criteria,
+            *candidate.grounding,
+        )
+    )
+    return "agents/<target-name>/" in combined or bool(
+        re.search(r"agents/[a-z0-9_.-]+/", combined)
+    )
+
+
+def candidate_requires_artifact_contract(candidate: MVPTaskCandidate) -> bool:
+    text = " ".join(
+        (
+            candidate.title,
+            candidate.objective,
+            *candidate.scope,
+            *candidate.acceptance_criteria,
+        )
+    ).lower()
+    return "artifact" in text or "artifacts" in text
+
+
+def candidate_has_observable_verification(candidate: MVPTaskCandidate) -> bool:
+    acceptance_text = " ".join(candidate.acceptance_criteria).lower()
+    verification_markers = (
+        "dry-run",
+        "verification",
+        "verify",
+        "command",
+        "compil",
+        "test",
+        "writes",
+        "prints",
+        "stops cleanly",
+        "records the reason",
+    )
+    return any(marker in acceptance_text for marker in verification_markers)
+
+
+def required_file_hints(candidate: MVPTaskCandidate) -> tuple[str, ...]:
+    text = " ".join((candidate.title, candidate.objective, *candidate.scope)).lower()
+    hints: list[str] = []
+    if "planner" in text:
+        hints.append("scripts/run_planner.py")
+    if "analyst" in text:
+        hints.append("scripts/run_analyst.py")
+    if "developer" in text:
+        hints.append("scripts/run_developer.py")
+    if "reviewer" in text:
+        hints.append("scripts/run_reviewer.py")
+    if "tester" in text:
+        hints.append("scripts/run_tester.py")
+    if any(keyword in text for keyword in ("orchestrator", "runner", "loop", "run cycle")):
+        hints.append("scripts/run_cycle.py")
+    return tuple(dict.fromkeys(hints))
+
+
+def candidate_meets_quality_bar(candidate: MVPTaskCandidate) -> bool:
+    scope_and_acceptance = "\n".join((*candidate.scope, *candidate.acceptance_criteria))
+
+    if not text_has_concrete_path(scope_and_acceptance):
+        return False
+
+    required_files = required_file_hints(candidate)
+    if required_files and not any(path in scope_and_acceptance for path in required_files):
+        return False
+
+    if candidate_requires_artifact_contract(candidate) and not candidate_mentions_target_artifact_path(candidate):
+        return False
+
+    if not candidate_has_observable_verification(candidate):
+        return False
+
+    return True
+
+
 def collect_repository_evidence(workspace_root: Path, target_repo_root: Path) -> str:
     evidence: list[str] = []
     candidates = [
@@ -412,6 +498,11 @@ Constraints:
 - You may propose AT MOST one task.
 - Base the task on the provided MVP definition, target-scoped repo analysis, and repository evidence.
 - Do not propose generic cleanup, vague improvements, or multi-task epics.
+- The task must be implementation-ready, not just directionally correct.
+- The `scope` must name at least one concrete implementation file path in backticks, such as `scripts/run_cycle.py`.
+- If the task writes or updates artifacts, the task must define a deterministic target-scoped artifact path pattern such as `agents/<target-name>/...`.
+- The `acceptance_criteria` must include at least one observable verification step or command path, such as a dry-run, compile step, or explicit written artifact/output behavior.
+- Do not generate a task that can be satisfied by changing only backlog metadata, generated prompts, or handoff artifacts.
 - If MVP appears complete or you cannot justify a grounded next task, return {{"decision":"stop","reason":"<brief reason>"}}.
 - If you propose a task, return JSON only with this shape:
   {{
@@ -452,7 +543,12 @@ Current repository evidence:
     if payload.get("decision") != "task":
         return None
 
-    return parse_candidate_dict(payload.get("task"))
+    candidate = parse_candidate_dict(payload.get("task"))
+    if candidate is None:
+        return None
+    if not candidate_meets_quality_bar(candidate):
+        return None
+    return candidate
 
 
 def plan_next_mvp_task(
