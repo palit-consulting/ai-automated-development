@@ -26,24 +26,18 @@ This repository focuses on practical workflows for:
 # Repository Structure
 
 Example repository structure:
-
-
-agents/
-instructions/
-workflows/
-
-prompts/
-development/
-review/
-refactoring/
-
-tools/
-repo-analysis/
-automation/
-
-examples/
-sample-workflows/
-
+- agents/
+- instructions/
+- workflows/
+- prompts/
+- development/
+- review/
+- refactoring/
+- tools/
+- repo-analysis/
+- automation/
+- examples/
+- sample-workflows/
 
 ---
 
