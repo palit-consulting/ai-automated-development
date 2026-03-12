@@ -46,6 +46,8 @@ Convert analysis and MVP goals into prioritized, implementation-ready backlog ta
 
 - Do not reference nonexistent repo paths such as `shared/...` when the real code lives in `scripts/shared/...`.
 - Do not use stale artifact paths; prefer the current target-scoped layout under `agents/<target-name>/...`.
+- For stop-reason artifacts in this repo, prefer `agents/<target-name>/orchestrator/stop-reasons/` and `scripts/shared/artifact_paths.py`; do not fall back to older `agents/<target-name>/logs/stop-reason...` or `shared/artifact_paths.py` forms.
+- For reviewer artifacts in this repo, prefer `agents/<target-name>/review/reviewer/`; do not shorten that to `agents/<target-name>/reviewer/`.
 - Do not write vague acceptance criteria such as "works correctly" without a concrete command, file, or observable output.
 - When grounding a task in a stop condition or runtime path, make sure the acceptance criteria describe a command that can actually reach that path in the current runner.
 - Do not invent helper APIs such as `config.repo_path` or renamed loader keyword arguments unless those exact names exist in the current source.

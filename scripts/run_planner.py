@@ -370,6 +370,68 @@ def candidate_mentions_target_artifact_path(candidate: MVPTaskCandidate) -> bool
     )
 
 
+def candidate_uses_stale_repo_paths(candidate: MVPTaskCandidate) -> bool:
+    combined = "\n".join(
+        (
+            candidate.title,
+            candidate.objective,
+            *candidate.scope,
+            *candidate.acceptance_criteria,
+            *candidate.grounding,
+        )
+    ).lower()
+    stale_markers = (
+        "shared/artifact_paths.py",
+        "`shared/artifact_paths.py`",
+        "agents/<target-name>/logs/stop-reason",
+        "agents/<target-name>/logs/stop-reasons",
+        "agents/<target-name>/reviewer/",
+        "agents/<target-name>/tester/",
+        "agents/<target-name>/developer/",
+    )
+    return any(marker in combined for marker in stale_markers)
+
+
+def candidate_has_correct_stop_reason_paths(candidate: MVPTaskCandidate) -> bool:
+    combined = "\n".join(
+        (
+            candidate.title,
+            candidate.objective,
+            *candidate.scope,
+            *candidate.acceptance_criteria,
+            *candidate.grounding,
+        )
+    ).lower()
+    if "stop reason" not in combined and "stop-reason" not in combined:
+        return True
+    if "artifact_paths.py" in combined and "scripts/shared/artifact_paths.py" not in combined:
+        return False
+    if "orchestrator/stop-reasons" not in combined:
+        return False
+    return True
+
+
+def candidate_has_correct_role_artifact_paths(candidate: MVPTaskCandidate) -> bool:
+    combined = "\n".join(
+        (
+            candidate.title,
+            candidate.objective,
+            *candidate.scope,
+            *candidate.acceptance_criteria,
+            *candidate.grounding,
+        )
+    ).lower()
+    if "reviewer" in combined:
+        if "agents/<target-name>/reviewer/" in combined:
+            return False
+        if "agents/<target-name>/review/reviewer/" not in combined and "reviewer report" in combined:
+            return False
+    if "tester" in combined:
+        if "agents/<target-name>/tester/" in combined:
+            return False
+    return True
+
+
 def candidate_requires_artifact_contract(candidate: MVPTaskCandidate) -> bool:
     text = " ".join(
         (
@@ -423,11 +485,20 @@ def candidate_meets_quality_bar(candidate: MVPTaskCandidate) -> bool:
     if not text_has_concrete_path(scope_and_acceptance):
         return False
 
+    if candidate_uses_stale_repo_paths(candidate):
+        return False
+
     required_files = required_file_hints(candidate)
     if required_files and not any(path in scope_and_acceptance for path in required_files):
         return False
 
     if candidate_requires_artifact_contract(candidate) and not candidate_mentions_target_artifact_path(candidate):
+        return False
+
+    if not candidate_has_correct_stop_reason_paths(candidate):
+        return False
+
+    if not candidate_has_correct_role_artifact_paths(candidate):
         return False
 
     if not candidate_has_observable_verification(candidate):

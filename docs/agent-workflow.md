@@ -37,6 +37,7 @@ Instead:
 7. If the task introduces a new artifact location, explain whether it replaces or complements any existing artifact path.
 8. If the task depends on an existing helper, config loader, dataclass, or CLI contract, use the exact names from the current source rather than inventing renamed variants.
 9. Stop and surface the generated task for human review before implementation continues.
+10. For stop-reason work in this repository, use the current target-scoped path contract under `agents/<target-name>/orchestrator/stop-reasons/` and the helper in `scripts/shared/artifact_paths.py`, not older `logs/stop-reason...` variants.
 
 For automation-facing planner integrations:
 
