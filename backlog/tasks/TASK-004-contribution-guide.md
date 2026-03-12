@@ -1,7 +1,7 @@
 # TASK-004 Contribution Guide
 
 ## Status
-todo
+done
 
 ## Priority
 medium
