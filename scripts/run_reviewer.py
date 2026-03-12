@@ -12,9 +12,10 @@ from shared.artifact_paths import (
     analysis_path,
     developer_handoff_path,
     developer_implementation_path,
+    generated_tasks_dir,
     reviewer_report_path,
 )
-from shared.task_utils import extract_section, extract_task_code
+from shared.task_utils import extract_section, extract_task_code, find_latest_task
 
 PUSHED_COMMIT_RE = re.compile(r"Pushed commit hash:\s*`([^`]+)`")
 COMMIT_HASH_RE = re.compile(r"^[0-9a-fA-F]{7,40}$")
@@ -54,6 +55,35 @@ def extract_pushed_commit_hash(handoff_text: str) -> str | None:
     if not value or value == "pending":
         return None
     return value
+
+
+def select_reviewer_task(
+    *,
+    repo_root: Path,
+    goal: str | None,
+    workspace_root: Path,
+    target_name: str,
+    planned_task: tuple[Path, str] | None = None,
+) -> tuple[Path, str]:
+    try:
+        return select_developer_task(
+            repo_root=repo_root,
+            goal=goal,
+            workspace_root=workspace_root,
+            target_name=target_name,
+            planned_task=planned_task,
+        )
+    except FileNotFoundError:
+        if planned_task is not None or goal:
+            raise
+
+    candidate_dirs = [generated_tasks_dir(workspace_root, target_name), workspace_root / "backlog" / "tasks"]
+    for task_dir in candidate_dirs:
+        latest_task = find_latest_task(task_dir)
+        if latest_task is not None:
+            return latest_task, latest_task.read_text(encoding="utf-8")
+
+    raise FileNotFoundError("Reviewer phase requires at least one backlog task to inspect.")
 
 
 def inspect_pushed_commit(target_repo_root: Path, pushed_commit_hash: str | None) -> tuple[bool, str]:
@@ -324,26 +354,31 @@ def build_reviewer_report(
     )
 
 
-def main() -> int:
-    args = parse_args()
-    target_repo_root = Path(args.repo).resolve()
-    workspace_root = Path(__file__).resolve().parent.parent
-    goal = args.goal or ""
-    selection = select_developer_task(goal=goal, repo_root=target_repo_root, workspace_root=workspace_root)
-    target_name = selection.target_name
-    task_path = selection.task_path
+def run_reviewer_phase(
+    goal: str | None,
+    repo_root: Path,
+    workspace_root: Path,
+    target_name: str,
+    dry_run: bool,
+    planned_task: tuple[Path, str] | None = None,
+) -> Path:
+    task_path, task_text = select_reviewer_task(
+        repo_root=repo_root,
+        goal=goal,
+        workspace_root=workspace_root,
+        target_name=target_name,
+        planned_task=planned_task,
+    )
     task_code = extract_task_code(task_path).lower()
-
-    task_text = task_path.read_text(encoding="utf-8")
+    report_path = reviewer_report_path(workspace_root, target_name, task_code)
     analysis_text = read_if_exists(analysis_path(workspace_root, target_name))
     handoff_text = read_if_exists(developer_handoff_path(workspace_root, target_name, task_code))
     implementation_text = read_if_exists(developer_implementation_path(workspace_root, target_name, task_code))
-
     report = build_reviewer_report(
-        goal=goal or selection.goal,
+        goal=goal or extract_section(task_text, "Objective") or task_code,
         workspace_root=workspace_root,
         target_name=target_name,
-        target_repo_root=target_repo_root,
+        target_repo_root=repo_root,
         task_path=task_path,
         task_text=task_text,
         analysis_text=analysis_text,
@@ -351,14 +386,31 @@ def main() -> int:
         implementation_text=implementation_text,
     )
 
-    if args.dry_run:
-        print(report)
-        return 0
+    print(f"Reviewer selected task: {task_path}")
 
-    output_path = reviewer_report_path(workspace_root, target_name, task_code)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(report, encoding="utf-8")
-    print(f"Wrote reviewer report to {output_path.relative_to(workspace_root)}")
+    if dry_run:
+        print(f"[dry-run] Would write reviewer report: {report_path}")
+        print(report)
+        return report_path
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(report, encoding="utf-8")
+    print(f"Reviewer report written: {report_path}")
+    return report_path
+
+
+def main() -> int:
+    args = parse_args()
+    repo_root = Path(args.repo).resolve()
+    workspace_root = Path(".").resolve()
+    target_name = repo_root.name
+    run_reviewer_phase(
+        goal=args.goal,
+        repo_root=repo_root,
+        workspace_root=workspace_root,
+        target_name=target_name,
+        dry_run=args.dry_run,
+    )
     return 0
 
 
