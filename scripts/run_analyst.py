@@ -89,11 +89,16 @@ def collect_repo_snapshot(target_repo_root: Path, workspace_root: Path, target_n
     onboarding = read_if_exists("docs/target-repo-onboarding.md")
     context = read_if_exists("docs/target-repo-context.md")
 
+    analysis_artifact = analysis_path(workspace_root, target_name)
+    backlog_dir = generated_tasks_dir(workspace_root, target_name)
+
     return {
         "file_count": len(files),
         "top_level_dirs": top_level_dirs,
-        "has_backlog": generated_tasks_dir(workspace_root, target_name).exists(),
+        "has_backlog": backlog_dir.exists(),
+        "backlog_task_count": len(list(backlog_dir.glob("TASK-*.md"))) if backlog_dir.exists() else 0,
         "has_prompts": (workspace_root / "prompts/agents").exists(),
+        "analysis_artifact": analysis_artifact.relative_to(workspace_root),
         "readme_preview": "\n".join(readme.splitlines()[:12]),
         "mvp_preview": "\n".join(mvp.splitlines()[:12]),
         "onboarding_preview": "\n".join(onboarding.splitlines()[:12]),
@@ -127,10 +132,12 @@ def build_analysis_markdown(
 - The analysis follows the onboarding and repository-context guidance so planning is grounded in explicit repository evidence.
 - A local CLI should keep outputs file-based to preserve human review and easy iteration.
 - Analyst output should be regenerated each run to keep planning grounded in current state.
+- Planner follow-up should use this target-scoped analysis together with `docs/mvp.md` to evaluate remaining MVP gaps when the backlog is exhausted.
 
 ## Artifacts
 - {analysis_rel_path}: This analysis snapshot.
 - Repository snapshot summary: file count, top-level directories, and documentation previews supporting onboarding intake.
+- Backlog context: target-scoped task directory presence and task count to help the planner judge whether work is already represented elsewhere.
 
 ## Open Questions / Risks
 - Future phases (developer/reviewer/tester) still need integration points and output contracts.
@@ -139,7 +146,7 @@ def build_analysis_markdown(
 
 ## Recommended Next Step
 - Next agent: Planner
-- Instruction: Convert analysis into small, dependency-safe backlog tasks informed by the onboarding checklist and repository-context evidence.
+- Instruction: Convert analysis into small, dependency-safe backlog tasks informed by the onboarding checklist, repository-context evidence, and any remaining MVP gaps not already covered by target-scoped backlog tasks.
 
 ---
 
@@ -147,7 +154,9 @@ def build_analysis_markdown(
 - File count (excluding .git): {snapshot['file_count']}
 - Top-level directories: {", ".join(snapshot['top_level_dirs'])}
 - agents/backlog/tasks present: {snapshot['has_backlog']}
+- Target backlog task count: {snapshot['backlog_task_count']}
 - prompts/agents present: {snapshot['has_prompts']}
+- Target analysis artifact: {snapshot['analysis_artifact']}
 
 ## Analysis Expectations
 Use the repository snapshot and reviewed docs to capture:
@@ -156,6 +165,7 @@ Use the repository snapshot and reviewed docs to capture:
 - structure and architecture clues
 - conventions and quality signals
 - risks, gaps, and small-slice improvement opportunities
+- remaining MVP gaps that are not already addressed by current target-scoped backlog work
 
 ### README.md (preview)
 ```
